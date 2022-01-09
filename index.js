@@ -10,8 +10,13 @@ app.get('/', (req, res) => {
 });
 
 app.post('/send', (req, res) => {
-    let request = req.body;
-    console.log(request)
+    const { key, to, from, subject, body } = req.body;
+
+    if (!key || !to || !from || !subject || !body) {
+        res.status(400).send({"status": "error", "message": "Missing parameters"});
+        return;
+    }
+
 	res.send(request);
 });
 
