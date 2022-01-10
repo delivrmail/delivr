@@ -12,7 +12,8 @@ app.get('/', (req, res) => {
 });
 
 app.post('/send', (req, res) => {
-    const { key, project, to, from, subject, body } = req.body;
+    const { key } = req.headers;
+    const { project, to, from, subject, body } = req.body;
 
     // Make sure all the required fields are present
     if (!key || !to || !from || !subject || !body) {
