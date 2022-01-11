@@ -1,6 +1,7 @@
 const express = require('express');
 const { verifyAPIKey } = require('./model/authentication');
-const { validUUID } = require('./model/helpers');
+const { validUUID, validEmail } = require('./model/helpers');
+const { createLog } = require('./model/logging');
 
 const app = express();
 const port = 6969;
@@ -11,13 +12,19 @@ app.get('/', (req, res) => {
     res.send('Hello World, from Delivr!');
 });
 
-app.post('/send', (req, res) => {
+app.post('/email', (req, res) => {
     const { key } = req.headers;
     const { project, to, from, subject, body } = req.body;
 
     // Make sure all the required fields are present
-    if (!key || !to || !from || !subject || !body) {
+    if (!key || !to || !from || !body) {
         res.status(400).send({"status": "error", "message": "Missing parameters"});
+        return;
+    }
+
+    // Ensure the emails are valid
+    if (!validEmail(to) || !validEmail(from)) {
+        res.status(400).send({"status": "error", "message": "Invalid email address"});
         return;
     }
 
@@ -28,13 +35,15 @@ app.post('/send', (req, res) => {
     }
 
     // Ensure the API key is valid
-    verifyAPIKey(key, project).then(valid => {
-        if (!valid) {
+    verifyAPIKey(key, project).then(async (response) => {
+        if (!response.valid) {
             res.status(400).send({"status": "error", "message": "API Key is invalid"});
             return;
         }
 
-        res.send({"status": "success", "message": "Message sent"});
+        // Create the log
+        const result = await createLog(response.user, subject, body, 'TEXT', to, from, project);
+        res.send({"status": "success", "message": result});
         
     }).catch(err => {
         console.log(err)
@@ -42,12 +51,6 @@ app.post('/send', (req, res) => {
         return;
     });
 
-	// res.send(request);
 });
 
 app.listen(port, () => console.log(`Delivr listening on port ${port}!`))
-
-const result = async() => {
-    const valid = await verifyAPIKey('sk_cm03ed0snc3vw5s9053yr', "f8fd3cf3-f7d4-4388-9cad-bac168454b92")
-    console.log(valid)
-}

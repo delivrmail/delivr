@@ -4,4 +4,11 @@ function validUUID(uuid) {
     return expression.test(uuid);
 }
 
+const validEmail = (email) => {
+    const expression = /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
+
+    return expression.test(email);
+}
+
 exports.validUUID = validUUID;
+exports.validEmail = validEmail;

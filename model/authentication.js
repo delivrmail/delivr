@@ -1,9 +1,8 @@
 const bcrypt = require('bcrypt');
-const { knex } = require('./database');
+const { database } = require('./database');
 
 const verifyAPIKey = async (key, project_id) => {
     const keys = await fetchProjectKeys(project_id)
-    let valid = false
 
     if (!keys) {
         return false;
@@ -11,8 +10,11 @@ const verifyAPIKey = async (key, project_id) => {
         for (const storedKey of keys) {
             let status = bcrypt.compareSync(key, storedKey.key)
             if (status) {
-                valid = true
-                return valid
+                const authenticated_response = {
+                    valid: true,
+                    user: storedKey.user
+                }
+                return authenticated_response
             } else {
                 if (keys.indexOf(storedKey) === (keys.length - 1)) {
                     return false
@@ -25,7 +27,7 @@ const verifyAPIKey = async (key, project_id) => {
 const fetchProjectKeys = async (project_id) => {
     // CHECK IF VALID
     try {
-        const keys = await knex('public.api_keys')
+        const keys = await database('public.api_keys')
             .select('*')
             .where({
                 project: project_id
