@@ -53,7 +53,7 @@ app.post('/email', (req, res) => {
                     res.send({"status": "success", "message": logResponse});
                 } else {
                     await updateLog("FAILED", logResponse[0]);
-                    res.status(400).send({"status": "error", "message": "Email failed to send"})
+                    res.status(400).send({"status": "error", "message": "Email failed to send", "output": sendResult});
                 }
             }
         );
