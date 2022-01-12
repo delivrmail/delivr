@@ -2,6 +2,7 @@ const express = require('express');
 const { verifyAPIKey } = require('./model/authentication');
 const { validUUID, validEmail } = require('./model/helpers');
 const { createLog } = require('./model/logging');
+const { sendEmail } = require('./model/send');
 
 const app = express();
 const port = 6969;
@@ -15,6 +16,7 @@ app.get('/', (req, res) => {
 app.post('/email', (req, res) => {
     const { key } = req.headers;
     const { project, to, from, subject, body } = req.body;
+    let result;
 
     // Make sure all the required fields are present
     if (!key || !to || !from || !body) {
@@ -41,9 +43,17 @@ app.post('/email', (req, res) => {
             return;
         }
 
-        // Create the log
-        const result = await createLog(response.user, subject, body, 'TEXT', to, from, project);
-        res.send({"status": "success", "message": result});
+        const result = await sendEmail()
+
+        if (result != null) {
+            // If the sending succeeded, create a log in DB
+            const logResponse = await createLog(response.user, subject, body, 'TEXT', to, from, project);
+            res.send({"status": "success", "message": logResponse});
+        } else {
+            res.status(400).send({"status": "error", "message": "Email failed to send"})
+        }
+        
+
         
     }).catch(err => {
         console.log(err)
