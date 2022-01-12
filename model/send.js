@@ -1,15 +1,15 @@
 const { exec } = require("child_process");
 
-const sendEmail = async () => {
+const sendEmail = async (subject_line = "", body, to, from) => {
 	
-	exec(`echo "Test from the API" | sudo mail -s "creative subject line lol" recepient@whatever.com -aFrom:sajjad@delivr.dev`, (error, stdout, stderr) => {
+	exec(`echo "${body}" | sudo mail -s "${subject_line}" ${to} -aFrom:${from}`, (error, stdout, stderr) => {
         if (error) {
             console.log(`error: ${error.message}`);
-            throw error;
+            return error;
         }
         if (stderr) {
             console.log(`stderr: ${stderr}`);
-            throw stderr;
+            return stderr;
         }
 
         return stdout;

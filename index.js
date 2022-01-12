@@ -16,7 +16,6 @@ app.get('/', (req, res) => {
 app.post('/email', (req, res) => {
     const { key } = req.headers;
     const { project, to, from, subject, body } = req.body;
-    let result;
 
     // Make sure all the required fields are present
     if (!key || !to || !from || !body) {
@@ -43,16 +42,15 @@ app.post('/email', (req, res) => {
             return;
         }
 
-        const result = await sendEmail()
+        const result = await sendEmail(subject, body, to, from);
 
-        if (result != null) {
+        if (result == null) {
             // If the sending succeeded, create a log in DB
             const logResponse = await createLog(response.user, subject, body, 'TEXT', to, from, project);
             res.send({"status": "success", "message": logResponse});
         } else {
             res.status(400).send({"status": "error", "message": "Email failed to send"})
         }
-        
 
         
     }).catch(err => {
