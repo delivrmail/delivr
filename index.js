@@ -1,7 +1,7 @@
 const express = require('express');
 const { verifyAPIKey } = require('./model/authentication');
 const { validUUID, validEmail } = require('./model/helpers');
-const { createLog } = require('./model/logging');
+const { createLog, updateLog } = require('./model/logging');
 const { sendEmail } = require('./model/send');
 
 const app = express();
@@ -42,15 +42,22 @@ app.post('/email', (req, res) => {
             return;
         }
 
-        const result = await sendEmail(subject, body, to, from);
-
-        if (result == null) {
-            // If the sending succeeded, create a log in DB
-            const logResponse = await createLog(response.user, subject, body, 'TEXT', to, from, project);
-            res.send({"status": "success", "message": logResponse});
-        } else {
-            res.status(400).send({"status": "error", "message": "Email failed to send"})
-        }
+        // Should perhaps implement promise.all here?
+        const logResponse = await createLog(response.user, subject, body, 'TEXT', to, from, project);
+        await sendEmail(subject, body, to, from).then(
+            async (sendResult) => {
+                if (sendResult.status === "success") {
+                    // If the sending succeeded, create a log in DB
+                    // Perhaps do this after returning the response?
+                    await updateLog('SUCCEEDED', logResponse[0]);
+                    res.send({"status": "success", "message": logResponse});
+                } else {
+                    await updateLog("FAILED", logResponse[0]);
+                    res.status(400).send({"status": "error", "message": "Email failed to send"})
+                }
+            }
+        );
+        
 
         
     }).catch(err => {
