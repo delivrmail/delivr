@@ -15,12 +15,12 @@ const sendEmail = async (subject_line = "", body, to, from) => {
         console.log(`stderr: ${stderr}`);
         return {
             status: "error",
-            message: stderr,
+            message: stderr
         };
     }
 
     return {
-        status: "error",
+        status: "success",
         message: stdout
     };;
 }
