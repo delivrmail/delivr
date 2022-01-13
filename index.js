@@ -5,7 +5,7 @@ const { createLog, updateLog } = require('./model/logging');
 const { sendEmail } = require('./model/send');
 
 const app = express();
-const port = 6969;
+const port = 3000;
 
 app.use(express.json());
 
