@@ -15,7 +15,7 @@ app.get('/', (req, res) => {
 
 app.post('/email', (req, res) => {
     const { key } = req.headers;
-    const { project, to, from, subject, body } = req.body;
+    const { to, from, subject, body } = req.body;
 
     // Make sure all the required fields are present
     if (!key || !to || !from || !body) {
@@ -23,27 +23,26 @@ app.post('/email', (req, res) => {
         return;
     }
 
+    // Determine project ID and API Key from api key (which contains both)
+    const key_list = key.split(".")
+    const api_key = key_list[0]
+    const project = key_list[1]
+
     // Ensure the emails are valid
     if (!validEmail(to) || !validEmail(from)) {
         res.status(400).send({"status": "error", "message": "Invalid email address"});
         return;
     }
 
-    // Ensure the project ID is a valid UUID
-    if (!validUUID(project)) {
-        res.status(400).send({"status": "error", "message": "Please pass in the project ID as a UUID"});
-        return;
-    }
-
     // Ensure the API key is valid
-    verifyAPIKey(key, project).then(async (response) => {
+    verifyAPIKey(api_key, project).then(async (response) => {
         if (!response.valid) {
             res.status(400).send({"status": "error", "message": "API Key is invalid"});
             return;
         }
 
         // Should perhaps implement promise.all here?
-        const logResponse = await createLog(response.user, subject, body, 'TEXT', to, from, project);
+        const logResponse = await createLog(response.user, subject, body, 'TEXT', to, from, response.project_internal_id);
         await sendEmail(subject, body, to, from).then(
             async (sendResult) => {
                 if (sendResult.status === "success") {

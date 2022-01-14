@@ -12,8 +12,11 @@ const verifyAPIKey = async (key, project_id) => {
             if (status) {
                 const authenticated_response = {
                     valid: true,
-                    user: storedKey.user
+                    user: storedKey.user,
+                    project_internal_id: storedKey.project
                 }
+
+                console.log(authenticated_response)
                 return authenticated_response
             } else {
                 if (keys.indexOf(storedKey) === (keys.length - 1)) {
@@ -25,12 +28,11 @@ const verifyAPIKey = async (key, project_id) => {
 }
 
 const fetchProjectKeys = async (project_id) => {
-    // CHECK IF VALID
     try {
         const keys = await database('public.api_keys')
             .select('*')
             .where({
-                project: project_id
+                frontend_id: project_id
             })
         return keys || null
     } catch (error) {
