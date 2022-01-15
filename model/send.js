@@ -24,7 +24,7 @@ const processEmail = async (subject_line = "", body, to, from) => {
     if (typeof(to) === "string") {
         // Send to a single email
         return await sendEmail(subject_line, body, to, from);
-    } else {
+    } else if (Array.isArray(to)) {
         return {
 		    status: "error",
 		    message: "You can only currently send to one recipient at a time"
@@ -32,5 +32,4 @@ const processEmail = async (subject_line = "", body, to, from) => {
     }
 }
 
-exports.sendEmail = sendEmail;
 exports.processEmail = processEmail;
