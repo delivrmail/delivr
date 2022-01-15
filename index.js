@@ -2,7 +2,7 @@ const express = require('express');
 const { verifyAPIKey } = require('./model/authentication');
 const { validUUID, validEmail } = require('./model/helpers');
 const { createLog, updateLog } = require('./model/logging');
-const { sendEmail } = require('./model/send');
+const { processEmail } = require('./model/send');
 
 const app = express();
 const port = 3000;
@@ -29,8 +29,25 @@ app.post('/email', (req, res) => {
     const project = key_list[1]
 
     // Ensure the emails are valid
-    if (!validEmail(to) || !validEmail(from)) {
+    if (!validEmail(from)) {
         res.status(400).send({"status": "error", "message": "Invalid email address"});
+        return;
+    }
+
+    if (typeof(to) == "string") {
+        if (!validEmail(to)) {
+            res.status(400).send({"status": "error", "message": "Invalid email address"});
+            return;
+        }
+    } else if (Array.isArray(to)) {
+        for (const recipient of to) {
+            if (!validEmail(recipient)) {
+                res.status(400).send({"status": "error", "message": "Invalid email address"});
+                return;
+            }
+        }
+    } else {
+        res.status(400).send({"status": "error", "message": "Please pass in the emails as either a list or string"});
         return;
     }
 
@@ -43,7 +60,7 @@ app.post('/email', (req, res) => {
 
         // Should perhaps implement promise.all here?
         const logResponse = await createLog(response.user, subject, body, 'TEXT', to, from, response.project_internal_id);
-        await sendEmail(subject, body, to, from).then(
+        await processEmail(subject, body, to, from).then(
             async (sendResult) => {
                 if (sendResult.status === "success") {
                     // If the sending succeeded, create a log in DB
@@ -56,8 +73,6 @@ app.post('/email', (req, res) => {
                 }
             }
         );
-        
-
         
     }).catch(err => {
         console.log(err)
