@@ -25,10 +25,11 @@ const processEmail = async (subject_line = "", body, to, from) => {
         // Send to a single email
         return await sendEmail(subject_line, body, to, from);
     } else if (Array.isArray(to)) {
-        return {
-		    status: "error",
-		    message: "You can only currently send to one recipient at a time"
-		};
+    	// Convert the list of emails into a comma seperated string
+    	const to_string = to.join(',')
+
+    	return await sendEmail(subject_line, body, to_string, from);
+
     }
 }
 
