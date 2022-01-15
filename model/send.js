@@ -18,4 +18,19 @@ const sendEmail = async (subject_line = "", body, to, from) => {
 	};;
 }
 
+const processEmail = async (subject_line = "", body, to, from) => {
+    // Check if you are sending to a list or individual
+
+    if (typeof(to) === "string") {
+        // Send to a single email
+        return await sendEmail(subject_line, body, to, from);
+    } else {
+        return {
+		    status: "error",
+		    message: "You can only currently send to one recipient at a time"
+		};
+    }
+}
+
 exports.sendEmail = sendEmail;
+exports.processEmail = processEmail;
